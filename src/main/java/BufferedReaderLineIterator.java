@@ -2,17 +2,24 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.logging.Logger;
 
 public class BufferedReaderLineIterator extends BufferedReader {
 
-    BufferedReaderLineIterator(Reader in, int sz) {
-        super(in, sz);
+    Predicate<String> validationStrategy;
+    private final Logger log = Logger.getLogger("BufferedReaderLineIterator");
+
+    BufferedReaderLineIterator(Reader reader, int bufferSize, Predicate<String> validationStrategy) {
+        super(reader, bufferSize);
+        this.validationStrategy = validationStrategy;
     }
 
     boolean hasNext() {
-        //TODO think of a proper way to deal with readAheadLimit
+        //TODO придумать как быть с readAheadLimit
         try {
             mark(8192);
+            //TODO если строка пропускается из-за валидации
             if (readLine() == null) return false;
             else {
                 reset();
@@ -26,12 +33,21 @@ public class BufferedReaderLineIterator extends BufferedReader {
     String next() {
         try {
             mark(8192);
-            return readLine();
+            String next = readLine();
+            if (validationStrategy.test(next)) return next;
+            else {
+                log.warning("ошибка в строке \n" + next);
+                return next();
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
+
+    /**
+     * Возвращает курсор к месту последнего вызова next().
+     */
     void rollBack() {
         try {
             reset();

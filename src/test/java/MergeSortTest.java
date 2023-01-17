@@ -1,3 +1,4 @@
+import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -6,11 +7,12 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -24,6 +26,12 @@ class MergeSortTest {
 
     Supplier<String> randomIntStringSupplier = () -> String.valueOf(random.nextInt(Integer.MAX_VALUE));
 
+    Predicate<String> numericValidation = str -> {
+        if (!Character.isDigit(str.charAt(0)) || str.charAt(0) == '0') return false;
+        return !str.chars()
+                .anyMatch(ch -> !Character.isDigit((char) ch));
+    };
+
     @Test
     void fileMergeTest() throws IOException {
         Comparator<String> numericComparator = (a, b) ->
@@ -33,9 +41,11 @@ class MergeSortTest {
         generateFile("src/test/resources/file1", 100);
         generateFile("src/test/resources/file2", 200);
         BufferedReaderLineIterator readerIterator1 =
-                new BufferedReaderLineIterator(new FileReader("src/test/resources/file1"), 8192);
+                new BufferedReaderLineIterator(new FileReader("src/test/resources/file1"), 8192,
+                        numericValidation);
         BufferedReaderLineIterator readerIterator2 =
-                new BufferedReaderLineIterator(new FileReader("src/test/resources/file2"), 8192);
+                new BufferedReaderLineIterator(new FileReader("src/test/resources/file2"), 8192,
+                        numericValidation);
         List<String> result = MergeSort.mergeFiles(readerIterator1, readerIterator2, numericComparator);
         log.info(result.toString());
     }
@@ -44,7 +54,8 @@ class MergeSortTest {
         try (FileWriter fileWriter = new FileWriter(pathString, false)) {
             getOrderedNumericList(lines).forEach(str -> {
                 try {
-                    fileWriter.write(str + "\n");
+                    if (random.nextInt(100)!= 42) fileWriter.write(str + "\n");
+                    else fileWriter.write("dfsdfsf dfsfdsf");
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }

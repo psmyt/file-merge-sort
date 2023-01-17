@@ -40,7 +40,7 @@ public class MergeSort {
                 if (comparator.compare(a, b) >= 0) {
                     result.add(b);
                 } else {
-                    lineIterator2.rollBack(); //moves the cursor back to where next() was called the last time
+                    lineIterator2.rollBack();
                     break;
                 }
             }
