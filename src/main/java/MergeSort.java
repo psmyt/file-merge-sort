@@ -22,6 +22,7 @@ public class MergeSort {
             }
             result.add(a);
         }
+        listIterator2.forEachRemaining(result::add);
         return result;
     }
 }
