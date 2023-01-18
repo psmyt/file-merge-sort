@@ -28,15 +28,15 @@ public class MergeSort {
         return result;
     }
 
-    public static List<String> mergeFiles(BufferedReaderLineIterator lineIterator1,
-                                          BufferedReaderLineIterator lineIterator2,
+    public static List<String> mergeFiles(FileLineIterator lineIterator1,
+                                          FileLineIterator lineIterator2,
                                           Comparator<String> comparator
     ) {
         List<String> result = new ArrayList<>();
-        while (lineIterator1.hasNext()) {
-            String a = lineIterator1.next();
-            while (lineIterator2.hasNext()) {
-                String b = lineIterator2.next();
+        while (lineIterator1.hasValidNext()) {
+            String a = lineIterator1.validNext();
+            while (lineIterator2.hasValidNext()) {
+                String b = lineIterator2.validNext();
                 if (comparator.compare(a, b) >= 0) {
                     result.add(b);
                 } else {

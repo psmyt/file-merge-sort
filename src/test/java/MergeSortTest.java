@@ -1,4 +1,3 @@
-import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -11,8 +10,6 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -22,11 +19,12 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 class MergeSortTest {
 
     Random random = new Random();
-    Logger log = Logger.getLogger("MergeSortTest");
+    Logger log = Logger.getLogger(MergeSortTest.class.getName());
 
     Supplier<String> randomIntStringSupplier = () -> String.valueOf(random.nextInt(Integer.MAX_VALUE));
 
-    Predicate<String> numericValidation = str -> {
+    Predicate<String> naturalNumberValidation = str -> {
+        if (str.isEmpty()) return false;
         if (!Character.isDigit(str.charAt(0)) || str.charAt(0) == '0') return false;
         return !str.chars()
                 .anyMatch(ch -> !Character.isDigit((char) ch));
@@ -40,12 +38,12 @@ class MergeSortTest {
 
         generateFile("src/test/resources/file1", 100);
         generateFile("src/test/resources/file2", 200);
-        BufferedReaderLineIterator readerIterator1 =
-                new BufferedReaderLineIterator(new FileReader("src/test/resources/file1"), 8192,
-                        numericValidation);
-        BufferedReaderLineIterator readerIterator2 =
-                new BufferedReaderLineIterator(new FileReader("src/test/resources/file2"), 8192,
-                        numericValidation);
+        FileLineIterator readerIterator1 =
+                new FileLineIterator(new FileReader("src/test/resources/file1"), 8192,
+                        naturalNumberValidation);
+        FileLineIterator readerIterator2 =
+                new FileLineIterator(new FileReader("src/test/resources/file2"), 8192,
+                        naturalNumberValidation);
         List<String> result = MergeSort.mergeFiles(readerIterator1, readerIterator2, numericComparator);
         log.info(result.toString());
     }
@@ -55,7 +53,7 @@ class MergeSortTest {
             getOrderedNumericList(lines).forEach(str -> {
                 try {
                     if (random.nextInt(100)!= 42) fileWriter.write(str + "\n");
-                    else fileWriter.write("dfsdfsf dfsfdsf");
+                    else fileWriter.write("dfsdfsf dfsfdsf\n\nsdfsdfsf dfsfsd\n");
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
