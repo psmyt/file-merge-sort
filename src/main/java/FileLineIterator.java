@@ -24,8 +24,8 @@ public class FileLineIterator extends BufferedReader {
         //TODO придумать как быть с readAheadLimit
         try {
             mark(8192);
-            markLine = lineCount;
             String nextLine = readLine();
+            markLine = lineCount;
             lineCount++;
             if (nextLine == null) return false;
             if (validationStrategy.test(nextLine)) {
@@ -44,10 +44,11 @@ public class FileLineIterator extends BufferedReader {
 
     String validNext() {
         try {
-            markLine = lineCount;
-            mark(8192);
-            lineCount++;
-            return readLine();
+            if (hasValidNext()) {
+                lineCount++;
+                return readLine();
+            }
+            else throw new RuntimeException("в файле не осталось валидных строк");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -55,7 +56,7 @@ public class FileLineIterator extends BufferedReader {
 
 
     /**
-     * Возвращает курсор к месту последнего вызова next().
+     * Возвращает курсор к месту последнего вызова validNext().
      */
     void rollBack() {
         try {

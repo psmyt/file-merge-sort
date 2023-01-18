@@ -3,9 +3,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -30,19 +28,20 @@ class MergeSortTest {
                 .anyMatch(ch -> !Character.isDigit((char) ch));
     };
 
+    Comparator<String> numericComparator = (a, b) ->
+            Integer.valueOf(a).equals(Integer.valueOf(b)) ? 0 :
+                    Integer.parseInt(a) > Integer.parseInt(b) ? 1 : -1;
+
     @Test
     void fileMergeTest() throws IOException {
-        Comparator<String> numericComparator = (a, b) ->
-                Integer.valueOf(a).equals(Integer.valueOf(b)) ? 0 :
-                        Integer.parseInt(a) > Integer.parseInt(b) ? 1 : -1;
-
-        generateFile("src/test/resources/file1", 100);
-        generateFile("src/test/resources/file2", 200);
+        generateFile("src/test/resources/file1", 100000);
+        generateFile("src/test/resources/file2", 200000);
+        log.info("файлы созданы");
         FileLineIterator readerIterator1 =
-                new FileLineIterator(new FileReader("src/test/resources/file1"), 8192,
+                new FileLineIterator(new FileReader("src/test/resources/file1"), 4 * 8192,
                         naturalNumberValidation);
         FileLineIterator readerIterator2 =
-                new FileLineIterator(new FileReader("src/test/resources/file2"), 8192,
+                new FileLineIterator(new FileReader("src/test/resources/file2"), 4 * 8192,
                         naturalNumberValidation);
         List<String> result = MergeSort.mergeFiles(readerIterator1, readerIterator2, numericComparator);
         log.info(result.toString());
@@ -52,7 +51,7 @@ class MergeSortTest {
         try (FileWriter fileWriter = new FileWriter(pathString, false)) {
             getOrderedNumericList(lines).forEach(str -> {
                 try {
-                    if (random.nextInt(100)!= 42) fileWriter.write(str + "\n");
+                    if (random.nextInt(100) != 42) fileWriter.write(str + "\n");
                     else fileWriter.write("dfsdfsf dfsfdsf\n\nsdfsdfsf dfsfsd\n");
                 } catch (IOException e) {
                     throw new RuntimeException(e);
@@ -84,10 +83,6 @@ class MergeSortTest {
 
         log.info(list2.toString());
 
-        Comparator<String> numericComparator = (a, b) ->
-                Integer.valueOf(a).equals(Integer.valueOf(b)) ? 0 :
-                        Integer.parseInt(a) > Integer.parseInt(b) ? 1 : -1;
-
         List<String> expected = Stream.of(list1, list2)
                 .flatMap(Collection::stream)
                 .sorted(Comparator.comparingInt(Integer::parseInt))
@@ -96,7 +91,9 @@ class MergeSortTest {
         log.info(expected.toString());
 
         List<String> result = MergeSort.merge(list1.listIterator(), list2.listIterator(),
-                numericComparator);
+                (a, b) ->
+                        Integer.valueOf(a).equals(Integer.valueOf(b)) ? 0 :
+                                Integer.parseInt(a) > Integer.parseInt(b) ? 1 : -1);
 
         assertEquals(expected, result);
     }
@@ -106,5 +103,35 @@ class MergeSortTest {
                 .limit(size)
                 .sorted(Comparator.comparingInt(Integer::parseInt))
                 .collect(Collectors.toList());
+    }
+
+    @Test
+    void mergeFiles() throws IOException {
+        generateFile("src/test/resources/file1", 1000);
+        generateFile("src/test/resources/file2", 1000);
+        generateFile("src/test/resources/file3", 1000);
+        FileLineIterator readerIterator1 =
+                new FileLineIterator(new FileReader("src/test/resources/file1"), 4 * 8192,
+                        naturalNumberValidation);
+        FileLineIterator readerIterator2 =
+                new FileLineIterator(new FileReader("src/test/resources/file2"), 4 * 8192,
+                        naturalNumberValidation);
+        FileLineIterator readerIterator3 =
+                new FileLineIterator(new FileReader("src/test/resources/file3"), 4 * 8192,
+                        naturalNumberValidation);
+        PipedWriter pipedWriter = new PipedWriter();
+        PipedReader pipedReader = new PipedReader();
+        pipedWriter.connect(pipedReader);
+        BufferedWriter bufferedWriter = new BufferedWriter(pipedWriter);
+        FileLineIterator lineIterator = new FileLineIterator(pipedReader, 8192, naturalNumberValidation);
+        BufferedWriter writer = new BufferedWriter(new FileWriter("src/test/resources/result"));
+        new Thread(() -> {
+            try {
+                MergeSort.mergeInputStreams(readerIterator1, readerIterator2, bufferedWriter, numericComparator);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }).start();
+        MergeSort.mergeInputStreams(lineIterator, readerIterator3, writer, numericComparator);
     }
 }

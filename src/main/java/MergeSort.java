@@ -1,8 +1,7 @@
+import org.apache.commons.io.output.WriterOutputStream;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.ListIterator;
+import java.io.*;
+import java.util.*;
 
 public class MergeSort {
 
@@ -50,4 +49,28 @@ public class MergeSort {
         return result;
     }
 
+    public static void mergeInputStreams(FileLineIterator lineIterator1,
+                                         FileLineIterator lineIterator2,
+                                         BufferedWriter output,
+                                         Comparator<String> comparator
+    ) throws IOException {
+        while (lineIterator1.hasValidNext()) {
+            String a = lineIterator1.validNext();
+            while (lineIterator2.hasValidNext()) {
+                String b = lineIterator2.validNext();
+                if (comparator.compare(a, b) >= 0) {
+                    output.append(b).append(System.lineSeparator());
+                } else {
+                    lineIterator2.rollBack();
+                    break;
+                }
+            }
+            output.append(a).append(System.lineSeparator());
+        }
+        while (lineIterator2.hasValidNext()) {
+            output.append(lineIterator2.validNext())
+                    .append(System.lineSeparator());
+        }
+        output.close();
+    }
 }
