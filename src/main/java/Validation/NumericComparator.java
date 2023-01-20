@@ -1,4 +1,4 @@
-package Comparators;
+package Validation;
 
 import java.util.Comparator;
 
