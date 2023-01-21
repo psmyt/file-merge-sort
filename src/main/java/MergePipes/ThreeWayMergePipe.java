@@ -2,14 +2,16 @@ package MergePipes;
 
 import java.util.Comparator;
 
-class ThreeWayMergePipe implements Pipe {
+import static java.util.Objects.isNull;
+
+public class ThreeWayMergePipe implements Pipe {
 
     private final Pipe sourceA;
     private final Pipe sourceB;
 
     private final Comparator<String> comparator;
 
-    public ThreeWayMergePipe(Pipe sourceA, Pipe sourceB, Comparator<String> comparator) {
+    ThreeWayMergePipe(Pipe sourceA, Pipe sourceB, Comparator<String> comparator) {
         this.sourceA = sourceA;
         this.sourceB = sourceB;
         this.comparator = comparator;
@@ -19,8 +21,8 @@ class ThreeWayMergePipe implements Pipe {
     public String peek() {
         String a = sourceA.peek();
         String b = sourceB.peek();
-        if (isPoison(a)) return isPoison(b) ? POISON : b;
-        if (isPoison(b)) return isPoison(a) ? POISON : a;
+        if (isNull(a)) return isNull(b) ? null : b;
+        if (isNull(b)) return a;
         return comparator.compare(a, b) <= 0 ? a : b;
     }
 
@@ -28,8 +30,8 @@ class ThreeWayMergePipe implements Pipe {
     public String next() {
         String a = sourceA.peek();
         String b = sourceB.peek();
-        if (isPoison(a)) return isPoison(b) ? POISON : sourceB.next();
-        if (isPoison(b)) return isPoison(a) ? POISON : sourceA.next();
+        if (isNull(a)) return isNull(b) ? null : sourceB.next();
+        if (isNull(b)) return sourceA.next();
         return comparator.compare(a, b) <= 0 ?
                 sourceA.next() : sourceB.next();
     }

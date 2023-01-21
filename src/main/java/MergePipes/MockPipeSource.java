@@ -15,12 +15,12 @@ public class MockPipeSource implements Pipe {
 
     @Override
     public String peek() {
-        return supply.peek() != null ? supply.peek() : POISON;
+        return supply.peek() != null ? supply.peek() : null;
     }
 
     @Override
     public String next() {
         //            Thread.sleep(random.nextInt(100));
-        return supply.size() != 0 ? supply.remove() : POISON;
+        return supply.size() != 0 ? supply.remove() : null;
     }
 }
