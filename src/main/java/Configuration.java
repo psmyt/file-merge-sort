@@ -13,9 +13,10 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static ErrorHandler.ErrorHandler.exitWithMessage;
+import static Validation.Order.ASCENDING;
+import static Validation.Order.DESCENDING;
 import static java.lang.Character.isDigit;
 import static java.util.Objects.isNull;
-import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toList;
 
 class Configuration {
@@ -41,12 +42,12 @@ class Configuration {
     static Set<String> SUPPORTED_PARAMS = Set.of("-a", "-d", "-s", "-i");
 
     static Map<Set<String>, ValidationStrategy> VALIDATION_CHART = Map.of(
-            Set.of("-a", "-s"), new ValidationStrategy(STRING_COMPARATOR, STRING_VALIDATOR),
-            Set.of("-s"), new ValidationStrategy(STRING_COMPARATOR, STRING_VALIDATOR),
-            Set.of("-d", "-s"), new ValidationStrategy(STRING_COMPARATOR.reversed(), STRING_VALIDATOR),
-            Set.of("-a", "-i"), new ValidationStrategy(NUMERIC_COMPARATOR, NUMERIC_VALIDATOR),
-            Set.of("-i"), new ValidationStrategy(NUMERIC_COMPARATOR, NUMERIC_VALIDATOR),
-            Set.of("-d", "-i"), new ValidationStrategy(NUMERIC_COMPARATOR.reversed(), NUMERIC_VALIDATOR));
+            Set.of("-a", "-s"), new ValidationStrategy(STRING_COMPARATOR, STRING_VALIDATOR, ASCENDING),
+            Set.of("-s"), new ValidationStrategy(STRING_COMPARATOR, STRING_VALIDATOR, ASCENDING),
+            Set.of("-d", "-s"), new ValidationStrategy(STRING_COMPARATOR.reversed(), STRING_VALIDATOR, DESCENDING),
+            Set.of("-a", "-i"), new ValidationStrategy(NUMERIC_COMPARATOR, NUMERIC_VALIDATOR, ASCENDING),
+            Set.of("-i"), new ValidationStrategy(NUMERIC_COMPARATOR, NUMERIC_VALIDATOR, ASCENDING),
+            Set.of("-d", "-i"), new ValidationStrategy(NUMERIC_COMPARATOR.reversed(), NUMERIC_VALIDATOR, DESCENDING));
 
     ValidationStrategy validationStrategy;
     List<SourceFile> files;
@@ -143,7 +144,7 @@ class Configuration {
                 try {
                     if (comparator.compare(line1, line2) == 0) continue;
                     return comparator.compare(line1, line2) > 0 ?
-                            new SourceFile(name, Order.DESCENDING) : new SourceFile(name, Order.ASCENDING);
+                            new SourceFile(name, Order.DESCENDING) : new SourceFile(name, ASCENDING);
                 } catch (ClassCastException e) {
                     System.out.printf("ошибка в файле %s, одна из строк имеет неверный формат: %s, %s%n",
                             name, line1, line2);

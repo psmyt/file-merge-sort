@@ -19,7 +19,7 @@ public class PipeFactory {
     }
 
     public FileReaderPipe fileReaderPipeInstance(SourceFile file) {
-        return new FileReaderPipe(file);
+        return new FileReaderPipe(file, strategy.getSortingOrder());
     }
 
     public ValidatorPipe validatorPipeInstance(SourcePipe source) {

@@ -3,10 +3,11 @@ import Pipes.PipeFactory;
 import Pipes.Pipe;
 import Validation.ErrorLogger;
 import Validation.SourceFile;
-
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,6 +30,7 @@ public class Application {
     }
 
     private void execute() throws IOException {
+        System.out.printf("начало %s %n", Instant.now().atZone(ZoneId.systemDefault()));
         new Thread(logger).start();
         try (FileWriter fileWriter = new FileWriter(files.get(0));
              BufferedWriter writer = new BufferedWriter(fileWriter);
@@ -39,6 +41,7 @@ public class Application {
             while ((nextLine = output.next()) != null) {
                 writer.append(nextLine).append(System.lineSeparator());
             }
+        } finally {
             logger.finish();
         }
     }
