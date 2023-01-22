@@ -1,27 +1,27 @@
 import Pipes.ListOfSourcePipes;
 import Pipes.PipeFactory;
 import Pipes.Pipe;
+import Validation.ErrorLogger;
+import Validation.SourceFile;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.stream.Collectors;
 
 public class Application {
 
     final PipeFactory pipeFactory;
 
-    final List<String> files;
-    final BlockingQueue<String> errorLog = new ArrayBlockingQueue<>(1000);
+    final List<SourceFile> files;
+
+    final ErrorLogger logger = new ErrorLogger("src/test/resources/log.txt");
 
     Application(String[] args) {
-        Configuration configuration = new Configuration(args);
-        pipeFactory = new PipeFactory(configuration.getValidationStrategy(), errorLog);
-        files = configuration.getFileNames();
+        pipeFactory = new PipeFactory(Configuration.resolveValidationStrategy(args), logger);
+        files = Configuration.processFileNames(args);
     }
 
     public static void main(String[] args) throws IOException {
@@ -29,25 +29,23 @@ public class Application {
     }
 
     private void execute() throws IOException {
+        new Thread(logger).start();
         try (FileWriter fileWriter = new FileWriter(files.get(0));
              BufferedWriter writer = new BufferedWriter(fileWriter);
-             ListOfSourcePipes inputs = preparePipes(files.subList(1, files.size()));
+             ListOfSourcePipes inputs = preparePipes(files);
         ) {
             Pipe output = assemblePipes(inputs);
             String nextLine;
             while ((nextLine = output.next()) != null) {
                 writer.append(nextLine).append(System.lineSeparator());
             }
-            System.out.println(errorLog);
+            logger.finish();
         }
     }
 
-    public BlockingQueue<String> getErrorLog() {
-        return errorLog;
-    }
-
-    ListOfSourcePipes preparePipes(List<String> files) {
+    ListOfSourcePipes preparePipes(List<SourceFile> files) {
         return files.stream()
+                .skip(1)
                 .map(pipeFactory::fileReaderPipeInstance)
                 .map(pipeFactory::validatorPipeInstance)
                 .collect(Collectors.toCollection(ListOfSourcePipes::new));

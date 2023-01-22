@@ -1,29 +1,29 @@
 package Pipes;
 
+import Validation.ErrorLogger;
+import Validation.SourceFile;
 import Validation.ValidationStrategy;
-
-import java.util.concurrent.BlockingQueue;
 
 public class PipeFactory {
 
     private final ValidationStrategy strategy;
-    private final BlockingQueue<String> errorLog;
+    private final ErrorLogger errorLogger;
 
-    public PipeFactory(ValidationStrategy strategy, BlockingQueue<String> errorLog) {
+    public PipeFactory(ValidationStrategy strategy, ErrorLogger errorLogger) {
         this.strategy = strategy;
-        this.errorLog = errorLog;
+        this.errorLogger = errorLogger;
     }
 
     public SortingPipe SortingPipeInstance(Pipe sourceA, Pipe sourceB) {
         return new SortingPipe(sourceA, sourceB, strategy.getComparator());
     }
 
-    public FileReaderPipe fileReaderPipeInstance(String filePath) {
-        return new FileReaderPipe(filePath);
+    public FileReaderPipe fileReaderPipeInstance(SourceFile file) {
+        return new FileReaderPipe(file);
     }
 
     public ValidatorPipe validatorPipeInstance(SourcePipe source) {
-        return new ValidatorPipe(strategy, source, errorLog);
+        return new ValidatorPipe(strategy, source, errorLogger);
     }
 
 

@@ -1,10 +1,10 @@
 package Pipes;
 
+import Validation.ErrorLogger;
 import Validation.ValidationStatus;
 import Validation.ValidationStrategy;
 
 import java.util.Comparator;
-import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.function.Predicate;
 
@@ -15,21 +15,21 @@ public class ValidatorPipe implements SourcePipe, AutoCloseable {
     final Predicate<String> validator;
     final Comparator<String> comparator;
     private final SourcePipe source;
-    private final Queue<String> log;
+    private final BlockingQueue<String> log;
 
     private long lineCounter = 0;
 
     String previousValidLine;
 
-    ValidatorPipe(ValidationStrategy validationStrategy, SourcePipe source, BlockingQueue<String> log) {
+    ValidatorPipe(ValidationStrategy validationStrategy, SourcePipe source, ErrorLogger logger) {
         validator = validationStrategy.getValidator();
         comparator = validationStrategy.getComparator();
         this.source = source;
-        this.log = log;
+        this.log = logger.getSource();
     }
 
     public ValidationStatus validate(String line) {
-        if (line == null) return VALID; // null - конец файла, обрабатывается далее.
+        if (line == null) return VALID; // null - сигнализирует конец файла, обрабатывается в SortingPipe.
         if (previousValidLine != null) {
             return validator.test(line) && comparator.compare(line, previousValidLine) >= 0 ? VALID :
                     validator.test(line) ? OUT_OF_ORDER : INVALID;
@@ -80,11 +80,15 @@ public class ValidatorPipe implements SourcePipe, AutoCloseable {
     }
 
     private void logErrorMessage(String line, ValidationStatus status) {
-        log.add(String.format("ошибка в строке %s файла %s: %s\n строка: %s",
-                lineCounter,
-                source.getName(),
-                status == INVALID ? "неверный формат" : outOfOrderMessage(),
-                line));
+        try {
+            log.put(String.format("ошибка в строке %s файла %s: %s\n строка: %s",
+                    lineCounter,
+                    source.getName(),
+                    status == INVALID ? "неверный формат" : outOfOrderMessage(),
+                    line));
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private String outOfOrderMessage() {

@@ -1,5 +1,7 @@
 package Pipes;
 
+import Pipes.SourcePipe;
+
 import java.util.ArrayList;
 
 public class ListOfSourcePipes extends ArrayList<SourcePipe> implements AutoCloseable {

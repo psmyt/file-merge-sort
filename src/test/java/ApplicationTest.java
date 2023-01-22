@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
+import java.util.Scanner;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -24,7 +25,7 @@ class ApplicationTest {
     }
 
     @Test
-    public void appTest() throws IOException {
+    public void appTest() throws IOException, InterruptedException {
         Application.main(new String[]{"-i",
                 "src/test/resources/result",
                 "src/test/resources/file1",
@@ -43,7 +44,7 @@ class ApplicationTest {
     }
 
     @Test
-    public void paramsTest() throws IOException {
+    public void paramsTest() throws IOException, InterruptedException {
         Application.main(new String[]{"-i",
                 "src/test/resources/result",
                 "src/test/resources/file1",

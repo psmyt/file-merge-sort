@@ -1,33 +1,43 @@
 
+import Validation.Order;
+import Validation.SourceFile;
 import Validation.ValidationStrategy;
 
-import java.io.IOException;
-import java.nio.file.FileAlreadyExistsException;
+import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.stream.IntStream;
 
 import static ErrorHandler.ErrorHandler.exitWithMessage;
+import static java.lang.Character.isDigit;
+import static java.util.Objects.isNull;
+import static java.util.stream.Collectors.collectingAndThen;
+import static java.util.stream.Collectors.toList;
 
 class Configuration {
 
-    static Comparator<String> STRING_COMPARATOR = (s1, s2) -> 0;
+    public static Predicate<String> STRING_VALIDATOR = s -> !s.contains(" ");
+    public static Comparator<String> STRING_COMPARATOR = String::compareTo;
 
-    static Comparator<String> NUMERIC_COMPARATOR = (a, b) ->
+    public static Predicate<String> NUMERIC_VALIDATOR = Configuration::numericValidator;
+
+    public static boolean numericValidator(String str) {
+        if (str.isEmpty()) return false;
+        if (str.equals("0")) return true;
+        char firstSymbol = str.charAt(0);
+        if (firstSymbol == '-') return str.charAt(1) != '0' && numericValidator(str.substring(1));
+        if (firstSymbol == '0' && str.length() > 1) return false;
+        return IntStream.range(0, str.length()).allMatch(i -> isDigit(str.charAt(i)));
+    }
+
+    public static Comparator<String> NUMERIC_COMPARATOR = (a, b) ->
             Integer.valueOf(a).equals(Integer.valueOf(b)) ? 0 :
                     Integer.parseInt(a) > Integer.parseInt(b) ? 1 : -1;
 
-    static Predicate<String> NUMERIC_VALIDATOR = str -> {
-        if (str.isEmpty()) return false;
-        if (!Character.isDigit(str.charAt(0)) || str.charAt(0) == '0') return false;
-        return !str.chars()
-                .anyMatch(ch -> !Character.isDigit((char) ch));
-    };
-    static Predicate<String> STRING_VALIDATOR = s -> true;
     static Set<String> SUPPORTED_PARAMS = Set.of("-a", "-d", "-s", "-i");
 
     static Map<Set<String>, ValidationStrategy> VALIDATION_CHART = Map.of(
@@ -38,91 +48,132 @@ class Configuration {
             Set.of("-i"), new ValidationStrategy(NUMERIC_COMPARATOR, NUMERIC_VALIDATOR),
             Set.of("-d", "-i"), new ValidationStrategy(NUMERIC_COMPARATOR.reversed(), NUMERIC_VALIDATOR));
 
-    private ValidationStrategy validationStrategy;
+    ValidationStrategy validationStrategy;
+    List<SourceFile> files;
 
-    private List<String> fileNames;
-
-    Configuration(String[] args) {
-        fileNames = processFileNames(args);
-        validationStrategy = resolveValidationStrategy(args);
+    public Configuration(String[] args) {
+        this.validationStrategy = resolveValidationStrategy(args);
+        this.files = processFileNames(args);
     }
 
-    private ValidationStrategy resolveValidationStrategy(String[] args) {
+    public static ValidationStrategy resolveValidationStrategy(String[] args) {
         List<String> params = getParams(args);
         validate(params);
         return VALIDATION_CHART.get(new HashSet<>(params));
-    }
-
-    public ValidationStrategy getValidationStrategy() {
-        return validationStrategy;
-    }
-
-    public List<String> getFileNames() {
-        return fileNames;
     }
 
     private static List<String> getParams(String[] args) {
         return Arrays.stream(args)
                 .filter(arg -> arg.startsWith("-"))
                 .distinct()
-                .collect(Collectors.toList());
+                .collect(toList());
     }
 
-    private void validate(List<String> params) {
-        Supplier<Stream<String>> badParams = () -> params
-                .stream()
-                .filter(param -> param.startsWith("-"))
-                .filter(param -> !SUPPORTED_PARAMS.contains(param));
-
-        if (badParams.get().findAny().isPresent()) exitWithMessage(
-                String.format("неподдерживаемые параметры запуска: %s",
-                        badParams.get().collect(Collectors.joining(", "))));
+    private static void validate(List<String> params) {
+        if (!(params.contains("-i") || params.contains("-s")))
+            exitWithMessage("должен присутствовать один из параметров: -s или -i");
 
         if (params.contains("-a") && params.contains("-d"))
             exitWithMessage("противоречащие параметры : -a и -d");
 
         if (params.contains("-i") && params.contains("-s"))
             exitWithMessage("противоречащие параметры : -i и -s");
+
+        List<String> badParams = params.stream()
+                .filter(param -> !SUPPORTED_PARAMS.contains(param))
+                .collect(toList());
+
+        if (!badParams.isEmpty()) exitWithMessage(
+                "неподдерживаемые параметры запуска: %s",
+                String.join(", ", badParams));
+
     }
 
-    private List<String> processFileNames(String[] args) {
-        Supplier<Stream<String>> names = () -> Arrays
+    public static List<SourceFile> processFileNames(String[] args) {
+        List<String> names = Arrays
                 .stream(args)
-                .filter(x -> !(x.startsWith("-")));
+                .filter(x -> !(x.startsWith("-")))
+                .collect(toList());
 
-        if (names.get().count() < 3) exitWithMessage("укажите 3 или более файлов");
+        if (names.size() < 3) exitWithMessage("укажите 3 или более файлов");
 
-        Path outputFile = Path.of(names.get().limit(1).findFirst().get()); // выше проверено что стрим не пустой...
-        validateOutputFile(outputFile);
+        checkIfSourceFilesExist(names);
 
-        Stream<String> notFound = names.get().skip(1).filter(name -> !Files.exists(Path.of(name)));
+        String outputFile = names.get(0);
+        try {
+            createOutputFile(Path.of(outputFile));
+        } catch (InvalidPathException e) {
+            exitWithMessage("убедитесь в корректности указанного пути файла: " + outputFile);
+        }
 
-        if (notFound.findAny().isPresent())
-            exitWithMessage(String.format("файл(ы) не найден(ы): %s",
-                    notFound.collect(Collectors.joining(", "))));
-
-        return names.get().collect(Collectors.toList());
-
+        List<SourceFile> files = toFiles(names, args);
+        if (files.size() < 2) exitWithMessage("недостаточно источников для начала сортировки");
+        return files;
     }
 
-    private static void validateOutputFile(Path outputFile) {
+    private static void checkIfSourceFilesExist(List<String> names) {
+        List<String> notFound = names.stream()
+                .skip(1)
+                .filter(name -> !Files.exists(Path.of(name)))
+                .collect(toList());
+
+        if (!notFound.isEmpty())
+            exitWithMessage("файл(ы) не найден(ы): %s",
+                    String.join(", ", notFound));
+    }
+
+    private static List<SourceFile> toFiles(List<String> names, String[] args) {
+        List<SourceFile> files = names.stream()
+                .skip(1)
+                .map(name -> toFile(name, args))
+                .filter(file -> !isNull(file))
+                .collect(Collectors.toList());
+        files.add(0, new SourceFile(names.get(0)));
+        return files;
+    }
+
+    private static SourceFile toFile(String name, String[] args) {
+        try (FileReader fileReader = new FileReader(name);
+             BufferedReader bufferedReader = new BufferedReader(fileReader)
+        ) {
+            Comparator<String> comparator = getParams(args).contains("-i") ? NUMERIC_COMPARATOR : STRING_COMPARATOR;
+            while (true) {
+                String line1 = bufferedReader.readLine();
+                String line2 = bufferedReader.readLine();
+                try {
+                    if (comparator.compare(line1, line2) == 0) continue;
+                    return comparator.compare(line1, line2) > 0 ?
+                            new SourceFile(name, Order.DESCENDING) : new SourceFile(name, Order.ASCENDING);
+                } catch (ClassCastException e) {
+                    System.out.printf("ошибка в файле %s, одна из строк имеет неверный формат: %s, %s%n",
+                            name, line1, line2);
+                    continue;
+                } catch (NullPointerException e) {
+                    System.out.printf("не удалось оперделить направление сортировки для файла %s%n", name);
+                    System.out.printf("файл %s будет удален из списка источников%n", name);
+                    return null;
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static void createOutputFile(Path outputFile) {
         if (Files.exists(outputFile)) {
             System.out.printf(
-                    "файл %s уже существует, вы уверены что хотите перезаписать? (y/n)",
+                    "файл %s уже существует, вы уверены что хотите перезаписать? (y/n)%n",
                     outputFile.getFileName());
-            try {
-                while (true) {
-                    int response = System.in.read();
-                    if (response == 'n') System.exit(0);
-                    if (response == 'y') break;
+            try (Scanner scanner = new Scanner(System.in)) {
+                String response;
+                while (!(response = scanner.next()).equals("y")) {
+                    if (response.equals("n")) System.exit(0);
                 }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
             }
         } else try {
             Files.createFile(outputFile);
         } catch (IOException e) {
-            exitWithMessage("не получилось создать файл %s", outputFile.getFileName());
+            exitWithMessage("не удалось создать файл %s", outputFile.getFileName());
         }
     }
 }
