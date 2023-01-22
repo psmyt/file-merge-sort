@@ -1,4 +1,4 @@
-package MergePipes;
+package Pipes;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -35,26 +35,12 @@ class ReceivingPipeTest {
     }
 
     @Test
-    public void receivingPipeTest() {
-        List<String> load = generateLoad(10000);
-        Pipe receiver = new ReceivingPipe(new MockPipeSource(load));
-        load.forEach(s ->
-                {
-                    receiver.peek();
-                    assertEquals(s, receiver.next());
-                    receiver.peek();
-                    log.info(s);
-                }
-        );
-    }
-
-    @Test
     public void threeWayMergePipeTest() {
         var load1 = generateLoad(10000);
         var load2 = generateLoad(10000);
         log.info("start");
-        Pipe threeWayPipe = new ThreeWayMergePipe(new MockPipeSource(load1),
-                new MockPipeSource(load2),
+        Pipe threeWayPipe = new SortingPipe(new MockSourcePipe(load1),
+                new MockSourcePipe(load2),
                 numericComparator);
         Stream.of(load1, load2)
                 .flatMap(Collection::stream)
@@ -68,13 +54,13 @@ class ReceivingPipeTest {
         var load2 = generateLoad(500);
         var load3 = generateLoad(600);
         var load4 = generateLoad(105);
-        var source1 = new MockPipeSource(load1);
-        var source2 = new MockPipeSource(load2);
-        var source3 = new MockPipeSource(load3);
-        var source4 = new MockPipeSource(load4);
-        Pipe threeWay1 = new ThreeWayMergePipe(source1, source2, numericComparator);
-        Pipe threeWay2 = new ThreeWayMergePipe(source3, source4, numericComparator);
-        Pipe result = new ThreeWayMergePipe(threeWay1, threeWay2, numericComparator);
+        var source1 = new MockSourcePipe(load1);
+        var source2 = new MockSourcePipe(load2);
+        var source3 = new MockSourcePipe(load3);
+        var source4 = new MockSourcePipe(load4);
+        Pipe threeWay1 = new SortingPipe(source1, source2, numericComparator);
+        Pipe threeWay2 = new SortingPipe(source3, source4, numericComparator);
+        Pipe result = new SortingPipe(threeWay1, threeWay2, numericComparator);
         Stream.of(load1, load2, load3, load4)
                 .flatMap(Collection::stream)
                 .sorted(numericComparator)
@@ -83,11 +69,11 @@ class ReceivingPipeTest {
 
     static Stream<Arguments> sources() {
         return Stream.of(arguments(Stream.of(
-                new MockPipeSource(generateLoad(100000)),
-                new MockPipeSource(generateLoad(100000)),
-                new MockPipeSource(generateLoad(100000)),
-                new MockPipeSource(generateLoad(100000)),
-                new MockPipeSource(generateLoad(100000))).collect(Collectors.toList())));
+                new MockSourcePipe(generateLoad(100000)),
+                new MockSourcePipe(generateLoad(100000)),
+                new MockSourcePipe(generateLoad(100000)),
+                new MockSourcePipe(generateLoad(100000)),
+                new MockSourcePipe(generateLoad(100000))).collect(Collectors.toList())));
     }
 
     @ParameterizedTest
@@ -96,7 +82,7 @@ class ReceivingPipeTest {
         while (sources.size() > 1) {
             Pipe sourceA = sources.remove(0);
             Pipe sourceB = sources.remove(0);
-            sources.add(new ThreeWayMergePipe(sourceA, sourceB, numericComparator));
+            sources.add(new SortingPipe(sourceA, sourceB, numericComparator));
         }
         Pipe combinedPipe = sources.get(0);
         try (BufferedWriter writer =

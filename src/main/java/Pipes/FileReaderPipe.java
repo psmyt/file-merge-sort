@@ -1,10 +1,10 @@
-package MergePipes;
+package Pipes;
 
 import java.io.*;
 import java.util.LinkedList;
 import java.util.Queue;
 
-public class FileReaderPipe implements NamedPipe, AutoCloseable {
+public class FileReaderPipe implements SourcePipe, AutoCloseable {
 
     private final String filePath;
 

@@ -1,21 +1,23 @@
-import MergePipes.PipeFactory;
-import MergePipes.Pipe;
+import Pipes.ListOfSourcePipes;
+import Pipes.PipeFactory;
+import Pipes.Pipe;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class Application {
 
     final PipeFactory pipeFactory;
 
-    final Stream<String> files;
-    final BlockingQueue<String> errorLog = new ArrayBlockingQueue<>(10);
+    final List<String> files;
+    final BlockingQueue<String> errorLog = new ArrayBlockingQueue<>(1000);
+
     Application(String[] args) {
         Configuration configuration = new Configuration(args);
         pipeFactory = new PipeFactory(configuration.getValidationStrategy(), errorLog);
@@ -23,20 +25,20 @@ public class Application {
     }
 
     public static void main(String[] args) throws IOException {
-        new Application(args).start();
+        new Application(args).execute();
     }
 
-    private void start() throws IOException {
-        List<Pipe> inputs = preparePipes(files.skip(1));
-        Pipe output = assemblePipes(inputs);
-        try (FileWriter fileWriter = new FileWriter(files.limit(1).findAny().get());
-             BufferedWriter writer = new BufferedWriter(fileWriter)
+    private void execute() throws IOException {
+        try (FileWriter fileWriter = new FileWriter(files.get(0));
+             BufferedWriter writer = new BufferedWriter(fileWriter);
+             ListOfSourcePipes inputs = preparePipes(files.subList(1, files.size()));
         ) {
-            String nextLine = "";
-            while (nextLine != null) {
-                nextLine = output.next();
+            Pipe output = assemblePipes(inputs);
+            String nextLine;
+            while ((nextLine = output.next()) != null) {
                 writer.append(nextLine).append(System.lineSeparator());
             }
+            System.out.println(errorLog);
         }
     }
 
@@ -44,20 +46,21 @@ public class Application {
         return errorLog;
     }
 
-    List<Pipe> preparePipes(Stream<String> files) {
-        return files
+    ListOfSourcePipes preparePipes(List<String> files) {
+        return files.stream()
                 .map(pipeFactory::fileReaderPipeInstance)
-                .map(pipeFactory::inputValidatorPipeInstance)
-                .collect(Collectors.toList());
+                .map(pipeFactory::validatorPipeInstance)
+                .collect(Collectors.toCollection(ListOfSourcePipes::new));
     }
 
-    Pipe assemblePipes(List<Pipe> sources) {
-        while (sources.size() > 1) {
-            Pipe sourceA = sources.remove(0);
-            Pipe sourceB = sources.remove(0);
-            sources.add(pipeFactory.threeWayMergePipeInstance(sourceA, sourceB));
+    Pipe assemblePipes(ListOfSourcePipes sources) {
+        List<Pipe> pipes = new ArrayList<>(sources);
+        while (pipes.size() > 1) {
+            Pipe sourceA = pipes.remove(0);
+            Pipe sourceB = pipes.remove(0);
+            pipes.add(pipeFactory.SortingPipeInstance(sourceA, sourceB));
         }
-        return sources.get(0);
+        return pipes.get(0);
     }
 
 }

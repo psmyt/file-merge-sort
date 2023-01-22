@@ -1,4 +1,4 @@
-package MergePipes;
+package Pipes;
 
 import Validation.ValidationStrategy;
 
@@ -14,16 +14,16 @@ public class PipeFactory {
         this.errorLog = errorLog;
     }
 
-    public ThreeWayMergePipe threeWayMergePipeInstance(Pipe sourceA, Pipe sourceB) {
-        return new ThreeWayMergePipe(sourceA, sourceB, strategy.getComparator());
+    public SortingPipe SortingPipeInstance(Pipe sourceA, Pipe sourceB) {
+        return new SortingPipe(sourceA, sourceB, strategy.getComparator());
     }
 
     public FileReaderPipe fileReaderPipeInstance(String filePath) {
         return new FileReaderPipe(filePath);
     }
 
-    public InputValidatorPipe inputValidatorPipeInstance(NamedPipe source) {
-        return new InputValidatorPipe(strategy, source, errorLog);
+    public ValidatorPipe validatorPipeInstance(SourcePipe source) {
+        return new ValidatorPipe(strategy, source, errorLog);
     }
 
 

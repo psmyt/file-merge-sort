@@ -1,15 +1,15 @@
-package MergePipes;
+package Pipes;
 
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Random;
 
-public class MockPipeSource implements Pipe {
+public class MockSourcePipe implements Pipe {
     private final Queue<String> supply = new LinkedList<>();
     private final Random random = new Random();
 
-    MockPipeSource(Collection<String> load) {
+    MockSourcePipe(Collection<String> load) {
         supply.addAll(load);
     }
 

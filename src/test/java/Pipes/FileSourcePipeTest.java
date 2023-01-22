@@ -1,4 +1,4 @@
-package MergePipes;
+package Pipes;
 
 import Validation.ValidationStrategy;
 import org.junit.jupiter.api.Test;
@@ -25,7 +25,7 @@ class FileSourcePipeTest {
         BlockingQueue<String> log = new ArrayBlockingQueue<>(1000);
         var factory = new PipeFactory(new ValidationStrategy(numericComparator, naturalNumberValidation), log);
         try (FileReaderPipe fileReaderPipe = factory.fileReaderPipeInstance("src/test/resources/file1")) {
-            Pipe validator = factory.inputValidatorPipeInstance(fileReaderPipe);
+            Pipe validator = factory.validatorPipeInstance(fileReaderPipe);
             IntStream.range(0, 100).forEach(x -> System.out.println(validator.next()));
         } catch (Exception e) {
             throw new RuntimeException(e);

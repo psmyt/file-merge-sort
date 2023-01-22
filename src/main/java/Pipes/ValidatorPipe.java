@@ -1,4 +1,4 @@
-package MergePipes;
+package Pipes;
 
 import Validation.ValidationStatus;
 import Validation.ValidationStrategy;
@@ -10,18 +10,18 @@ import java.util.function.Predicate;
 
 import static Validation.ValidationStatus.*;
 
-public class InputValidatorPipe implements Pipe {
+public class ValidatorPipe implements SourcePipe, AutoCloseable {
 
     final Predicate<String> validator;
     final Comparator<String> comparator;
-    private final NamedPipe source;
+    private final SourcePipe source;
     private final Queue<String> log;
 
     private long lineCounter = 0;
 
     String previousValidLine;
 
-    InputValidatorPipe(ValidationStrategy validationStrategy, NamedPipe source, BlockingQueue<String> log) {
+    ValidatorPipe(ValidationStrategy validationStrategy, SourcePipe source, BlockingQueue<String> log) {
         validator = validationStrategy.getValidator();
         comparator = validationStrategy.getComparator();
         this.source = source;
@@ -89,5 +89,15 @@ public class InputValidatorPipe implements Pipe {
 
     private String outOfOrderMessage() {
         return String.format("нарушен порядок сортировки (последнее валидное значение - %s)", previousValidLine);
+    }
+
+    @Override
+    public void close() throws Exception {
+        source.close();
+    }
+
+    @Override
+    public String getName() {
+        return null;
     }
 }
