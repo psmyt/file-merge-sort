@@ -72,7 +72,7 @@ class Configuration {
 
     private static void validate(List<String> params) {
         if (!(params.contains("-i") || params.contains("-s")))
-            exitWithMessage("должен присутствовать один из параметров: -s или -i");
+            exitWithMessage("должен присутствовать хотя бы один из параметров: -s или -i");
 
         if (params.contains("-a") && params.contains("-d"))
             exitWithMessage("противоречащие параметры : -a и -d");
@@ -150,8 +150,8 @@ class Configuration {
                             name, line1, line2);
                     continue;
                 } catch (NullPointerException e) {
-                    System.out.printf("не удалось оперделить направление сортировки для файла %s%n", name);
-                    System.out.printf("файл %s будет удален из списка источников%n", name);
+                    System.out.printf("не удалось оперделить направление чтения источника %s%n", name);
+                    System.out.printf("%s будет удален из списка источников%n", name);
                     return null;
                 }
             }

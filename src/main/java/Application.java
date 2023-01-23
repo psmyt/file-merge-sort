@@ -3,6 +3,7 @@ import Pipes.PipeFactory;
 import Pipes.Pipe;
 import Validation.ErrorLogger;
 import Validation.SourceFile;
+
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -34,19 +35,21 @@ public class Application {
         new Thread(logger).start();
         try (FileWriter fileWriter = new FileWriter(files.get(0));
              BufferedWriter writer = new BufferedWriter(fileWriter);
-             ListOfSourcePipes inputs = preparePipes(files);
+             ListOfSourcePipes inputs = prepareSourcePipes(files);
         ) {
             Pipe output = assemblePipes(inputs);
-            String nextLine;
+            String nextLine = output.next();
+            writer.append(nextLine);
             while ((nextLine = output.next()) != null) {
-                writer.append(nextLine).append(System.lineSeparator());
+                writer.append(System.lineSeparator())
+                        .append(nextLine);
             }
         } finally {
-            logger.finish();
+            logger.finishJob();
         }
     }
 
-    ListOfSourcePipes preparePipes(List<SourceFile> files) {
+    ListOfSourcePipes prepareSourcePipes(List<SourceFile> files) {
         return files.stream()
                 .skip(1)
                 .map(pipeFactory::fileReaderPipeInstance)

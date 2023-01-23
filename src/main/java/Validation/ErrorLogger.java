@@ -45,7 +45,7 @@ public class ErrorLogger implements Runnable {
         }
     }
 
-    public void finish() {
+    public void finishJob() {
         stop.set(true);
     }
 }
