@@ -11,20 +11,17 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
 import java.util.Queue;
 
 public class FileReaderPipe implements SourcePipe, AutoCloseable {
 
     private final String filePath;
-
-    private Order sortingOrder;
     private final AutoCloseable source;
     private final BufferedLineReader lineReader;
     private final Queue<String> buffer = new LinkedList<>();
 
-    FileReaderPipe(SourceFile file, Order order) {
+    FileReaderPipe(SourceFile file, Order sortingOrder) {
         this.filePath = file.getName();
         try {
             if (file.getOrder() == sortingOrder) {

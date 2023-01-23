@@ -1,3 +1,4 @@
+package Configuration;
 
 import Validation.Order;
 import Validation.SourceFile;
@@ -10,34 +11,21 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static ErrorHandler.ErrorHandler.exitWithMessage;
 import static Validation.Order.ASCENDING;
 import static Validation.Order.DESCENDING;
-import static java.lang.Character.isDigit;
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toList;
 
-class Configuration {
+public class Configuration {
 
     public static Predicate<String> STRING_VALIDATOR = s -> !s.contains(" ");
     public static Comparator<String> STRING_COMPARATOR = String::compareTo;
 
-    public static Predicate<String> NUMERIC_VALIDATOR = Configuration::numericValidator;
+    public static Predicate<String> NUMERIC_VALIDATOR = Configuration::isNumber;
 
-    public static boolean numericValidator(String str) {
-        if (str.isEmpty()) return false;
-        if (str.equals("0")) return true;
-        char firstSymbol = str.charAt(0);
-        if (firstSymbol == '-') return str.charAt(1) != '0' && numericValidator(str.substring(1));
-        if (firstSymbol == '0' && str.length() > 1) return false;
-        return IntStream.range(0, str.length()).allMatch(i -> isDigit(str.charAt(i)));
-    }
-
-    public static Comparator<String> NUMERIC_COMPARATOR = (a, b) ->
-            Integer.valueOf(a).equals(Integer.valueOf(b)) ? 0 :
-                    Integer.parseInt(a) > Integer.parseInt(b) ? 1 : -1;
+    public static Comparator<String> NUMERIC_COMPARATOR = Configuration::compareStringsAsNumbers;
 
     static Set<String> SUPPORTED_PARAMS = Set.of("-a", "-d", "-s", "-i");
 
@@ -72,7 +60,7 @@ class Configuration {
 
     private static void validate(List<String> params) {
         if (!(params.contains("-i") || params.contains("-s")))
-            exitWithMessage("должен присутствовать один из параметров: -s или -i");
+            exitWithMessage("должен присутствовать хотя бы один из параметров: -s или -i");
 
         if (params.contains("-a") && params.contains("-d"))
             exitWithMessage("противоречащие параметры : -a и -d");
@@ -102,7 +90,7 @@ class Configuration {
 
         String outputFile = names.get(0);
         try {
-            createOutputFile(Path.of(outputFile));
+            createOrOverwriteOutputFile(Path.of(outputFile));
         } catch (InvalidPathException e) {
             exitWithMessage("убедитесь в корректности указанного пути файла: " + outputFile);
         }
@@ -150,8 +138,8 @@ class Configuration {
                             name, line1, line2);
                     continue;
                 } catch (NullPointerException e) {
-                    System.out.printf("не удалось оперделить направление сортировки для файла %s%n", name);
-                    System.out.printf("файл %s будет удален из списка источников%n", name);
+                    System.out.printf("не удалось оперделить направление чтения источника %s%n", name);
+                    System.out.printf("%s будет удален из списка источников%n", name);
                     return null;
                 }
             }
@@ -160,7 +148,7 @@ class Configuration {
         }
     }
 
-    private static void createOutputFile(Path outputFile) {
+    private static void createOrOverwriteOutputFile(Path outputFile) {
         if (Files.exists(outputFile)) {
             System.out.printf(
                     "файл %s уже существует, вы уверены что хотите перезаписать? (y/n)%n",
@@ -170,11 +158,58 @@ class Configuration {
                 while (!(response = scanner.next()).equals("y")) {
                     if (response.equals("n")) System.exit(0);
                 }
+                Files.delete(outputFile);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         } else try {
             Files.createFile(outputFile);
         } catch (IOException e) {
             exitWithMessage("не удалось создать файл %s", outputFile.getFileName());
         }
+    }
+
+    public static boolean isNumber(String str) {
+        int length = str.length();
+        if (length == 0) return false;
+        int i = 0;
+        if (str.charAt(i) == '0') {
+            if (str.substring(1).length() > 0) return false;
+        }
+        if (str.charAt(0) == '-') {
+            if (length == 1) {
+                return false;
+            }
+            if (str.charAt(1) == '0') return false;
+            i = 1;
+        }
+        for (; i < length; i++) {
+            char c = str.charAt(i);
+            if (c < '0' || c > '9') {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static int compareStringsAsNumbers(String str1, String str2) {
+        if (str1.startsWith("-")) {
+            return (str2.startsWith("-")) ?
+                    -1 * compareStringsAsNumbers(str1.substring(1), str2.substring(2))
+                    : -1;
+        } else {
+            if (str2.startsWith("-")) return 1;
+            int length1 = str1.length();
+            int length2 = str2.length();
+            if (length1 == length2) {
+                for (int i = 0; i < length1; i++) {
+                    int a = Character.getNumericValue(str1.charAt(i));
+                    int b = Character.getNumericValue(str2.charAt(i));
+                    if (a == b) continue;
+                    return (a > b) ? 1 : -1;
+                }
+            } else return (length1 > length2) ? 1 : -1;
+        }
+        return 0;
     }
 }

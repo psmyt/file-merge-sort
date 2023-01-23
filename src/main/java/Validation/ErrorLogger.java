@@ -20,24 +20,24 @@ public class ErrorLogger implements Runnable {
         this.logFilePath = logFilePath;
     }
 
-    public BlockingQueue<String> getSource() {
+    public BlockingQueue<String> getErrorQueue() {
         return source;
     }
 
     @Override
     public void run() {
-        try (FileWriter fileWriter = new FileWriter(logFilePath);
+        try (FileWriter fileWriter = new FileWriter(logFilePath, true);
              BufferedWriter writer = new BufferedWriter(fileWriter)
         ) {
             while (!stop.get()) {
                 String next = source.poll(1, TimeUnit.SECONDS);
                 if (next != null) {
-                    writer.append(source.take());
+                    writer.write(next);
                     writer.newLine();
                 }
             }
             while (!source.isEmpty()) {
-                writer.append(source.take());
+                writer.write(source.take());
                 if (!source.isEmpty()) writer.newLine();
             }
         } catch (IOException | InterruptedException e) {
@@ -45,7 +45,7 @@ public class ErrorLogger implements Runnable {
         }
     }
 
-    public void finish() {
+    public void finishJob() {
         stop.set(true);
     }
 }
