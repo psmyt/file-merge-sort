@@ -1,3 +1,4 @@
+import Configuration.Configuration;
 import Pipes.ListOfSourcePipes;
 import Pipes.PipeFactory;
 import Pipes.Pipe;
@@ -30,7 +31,7 @@ public class Application {
         new Application(args).execute();
     }
 
-    private void execute() throws IOException {
+    void execute() throws IOException {
         System.out.printf("начало %s %n", Instant.now().atZone(ZoneId.systemDefault()));
         new Thread(logger).start();
         try (FileWriter fileWriter = new FileWriter(files.get(0));

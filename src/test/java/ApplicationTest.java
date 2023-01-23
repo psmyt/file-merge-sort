@@ -1,4 +1,4 @@
-import org.junit.jupiter.api.AfterEach;
+import Configuration.Configuration;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class ApplicationTest {
 
 
-    @AfterEach
+//    @AfterEach
     public void deleteResultFile() {
         try {
             Files.delete(Path.of("src/test/resources/result"));
@@ -23,13 +23,18 @@ class ApplicationTest {
         }
     }
 
+//    @BeforeEach
+    public void delete() {
+        deleteResultFile();
+    }
+
     @Test
-    public void appTest() throws IOException, InterruptedException {
-        Application.main(new String[]{"-i",
+    public void appTest() throws IOException {
+        new Application(new String[]{"-i", "-d",
                 "src/test/resources/result",
                 "src/test/resources/file1",
                 "src/test/resources/file2",
-                "src/test/resources/file3"});
+                "src/test/resources/file3"}).execute();
         Path output = Path.of("src/test/resources/result");
         Path file1 = Path.of("src/test/resources/file1");
         Path file2 = Path.of("src/test/resources/file2");
@@ -37,13 +42,13 @@ class ApplicationTest {
         List<String> expected = Stream.of(Files.readAllLines(file1), Files.readAllLines(file2), Files.readAllLines(file3))
                 .flatMap(Collection::stream)
                 .filter(Configuration.NUMERIC_VALIDATOR)
-                .sorted(Configuration.NUMERIC_COMPARATOR)
+                .sorted(Configuration.NUMERIC_COMPARATOR.reversed())
                 .collect(Collectors.toList());
         assertEquals(expected, Files.readAllLines(output));
     }
 
     @Test
-    public void paramsTest() throws IOException, InterruptedException {
+    public void paramsTest() throws IOException {
         Application.main(new String[]{"-i",
                 "src/test/resources/result",
                 "src/test/resources/file1",

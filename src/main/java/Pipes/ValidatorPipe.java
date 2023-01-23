@@ -48,7 +48,8 @@ public class ValidatorPipe implements SourcePipe, AutoCloseable {
         if (status == VALID) return nextLine;
         else {
             logErrorMessage(nextLine, status);
-            return next();
+            peekTillNextValid();
+            return source.peek();
         }
     }
 
@@ -62,21 +63,21 @@ public class ValidatorPipe implements SourcePipe, AutoCloseable {
             return nextLine;
         } else {
             logErrorMessage(nextLine, status);
-            return nextValid();
+            peekTillNextValid();
+            String nextValid = source.next();
+            lineCounter++;
+            previousValidLine = nextValid;
+            return nextValid;
         }
     }
 
-    private String nextValid() {
-        ValidationStatus status = null;
-        do {
-            String nextLine = source.next();
+    private void peekTillNextValid() {
+        String nextLine;
+        while (validate(nextLine = source.peek()) != VALID) {
+            logErrorMessage(nextLine, validate(nextLine));
             lineCounter++;
-            logErrorMessage(nextLine, status);
+            source.next();
         }
-        while ((status = validate(source.peek())) != VALID);
-        String nextLine = source.next();
-        previousValidLine = nextLine;
-        return nextLine;
     }
 
     private void logErrorMessage(String line, ValidationStatus status) {
@@ -102,6 +103,6 @@ public class ValidatorPipe implements SourcePipe, AutoCloseable {
 
     @Override
     public String getName() {
-        return null;
+        return source.getName();
     }
 }
