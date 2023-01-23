@@ -1,8 +1,8 @@
-package Configuration;
+package configuration;
 
-import Validation.Order;
-import Validation.SourceFile;
-import Validation.ValidationStrategy;
+import validation.Order;
+import validation.SourceFile;
+import validation.ValidationStrategy;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -12,9 +12,9 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static ErrorHandler.ErrorHandler.exitWithMessage;
-import static Validation.Order.ASCENDING;
-import static Validation.Order.DESCENDING;
+import static exit.ErrorHandler.exitWithMessage;
+import static validation.Order.ASCENDING;
+import static validation.Order.DESCENDING;
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toList;
 

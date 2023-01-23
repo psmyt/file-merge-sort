@@ -1,4 +1,5 @@
-import Configuration.Configuration;
+import configuration.Configuration;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -23,7 +24,7 @@ class ApplicationTest {
         }
     }
 
-//    @BeforeEach
+    @BeforeEach
     public void delete() {
         deleteResultFile();
     }
@@ -45,14 +46,5 @@ class ApplicationTest {
                 .sorted(Configuration.NUMERIC_COMPARATOR.reversed())
                 .collect(Collectors.toList());
         assertEquals(expected, Files.readAllLines(output));
-    }
-
-    @Test
-    public void paramsTest() throws IOException, InterruptedException {
-        Application.main(new String[]{"-i",
-                "src/test/resources/result",
-                "src/test/resources/file1",
-                "src/test/resources/file2",
-                "src/test/resources/file3"});
     }
 }

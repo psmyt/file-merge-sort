@@ -1,8 +1,8 @@
-package Pipes;
+package pipes;
 
-import Validation.ErrorLogger;
-import Validation.SourceFile;
-import Validation.ValidationStrategy;
+import validation.ErrorLogger;
+import validation.SourceFile;
+import validation.ValidationStrategy;
 
 public class PipeFactory {
 

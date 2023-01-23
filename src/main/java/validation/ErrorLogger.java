@@ -1,4 +1,4 @@
-package Validation;
+package validation;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -26,7 +26,7 @@ public class ErrorLogger implements Runnable {
 
     @Override
     public void run() {
-        try (FileWriter fileWriter = new FileWriter(logFilePath, true);
+        try (FileWriter fileWriter = new FileWriter(logFilePath);
              BufferedWriter writer = new BufferedWriter(fileWriter)
         ) {
             while (!stop.get()) {

@@ -1,4 +1,4 @@
-package Pipes;
+package pipes;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -28,7 +28,7 @@ class ReceivingPipeTest {
     Logger log = Logger.getLogger(ReceivingPipeTest.class.getName());
 
     private static List<String> generateLoad(int size) {
-        return Stream.generate(() -> String.valueOf(random.nextInt(10000)))
+        return Stream.generate(() -> String.valueOf(random.nextInt(100000000)))
                 .limit(size)
                 .sorted(numericComparator)
                 .collect(Collectors.toList());

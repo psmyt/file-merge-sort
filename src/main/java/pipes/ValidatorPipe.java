@@ -1,14 +1,14 @@
-package Pipes;
+package pipes;
 
-import Validation.ErrorLogger;
-import Validation.ValidationStatus;
-import Validation.ValidationStrategy;
+import validation.ErrorLogger;
+import validation.ValidationStatus;
+import validation.ValidationStrategy;
 
 import java.util.Comparator;
 import java.util.concurrent.BlockingQueue;
 import java.util.function.Predicate;
 
-import static Validation.ValidationStatus.*;
+import static validation.ValidationStatus.*;
 
 public class ValidatorPipe implements SourcePipe, AutoCloseable {
 

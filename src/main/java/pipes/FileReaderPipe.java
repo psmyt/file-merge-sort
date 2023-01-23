@@ -1,10 +1,10 @@
-package Pipes;
+package pipes;
 
-import Pipes.FileReaders.BufferedLineReader;
-import Pipes.FileReaders.BufferedReaderAdapter;
-import Pipes.FileReaders.ReverseLineReader;
-import Validation.Order;
-import Validation.SourceFile;
+import pipes.FileReaders.BufferedLineReader;
+import pipes.FileReaders.BufferedReaderAdapter;
+import pipes.FileReaders.ReverseLineReader;
+import validation.Order;
+import validation.SourceFile;
 import org.apache.commons.io.input.ReversedLinesFileReader;
 
 import java.io.*;

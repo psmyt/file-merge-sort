@@ -1,7 +1,7 @@
-package Pipes;
-import Validation.ErrorLogger;
-import Validation.SourceFile;
-import Validation.ValidationStrategy;
+package pipes;
+import validation.ErrorLogger;
+import validation.SourceFile;
+import validation.ValidationStrategy;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -12,10 +12,9 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static Configuration.Configuration.NUMERIC_COMPARATOR;
-import static Configuration.Configuration.NUMERIC_VALIDATOR;
-import static Validation.Order.ASCENDING;
-import static Validation.Order.DESCENDING;
+import static configuration.Configuration.NUMERIC_COMPARATOR;
+import static configuration.Configuration.NUMERIC_VALIDATOR;
+import static validation.Order.ASCENDING;
 import static org.junit.jupiter.api.Assertions.*;
 
 
@@ -37,8 +36,8 @@ class FileSourcePipeTest {
     void fileSourcePipeTest() {
         ErrorLogger logger = new ErrorLogger("src/test/resources/log");
         new Thread(logger).start();
-        var factory = new PipeFactory(new ValidationStrategy(NUMERIC_COMPARATOR, NUMERIC_VALIDATOR, DESCENDING), logger);
-        try (FileReaderPipe fileReaderPipe = factory.fileReaderPipeInstance(new SourceFile("src/test/resources/file1"));
+        var factory = new PipeFactory(new ValidationStrategy(NUMERIC_COMPARATOR, NUMERIC_VALIDATOR, ASCENDING), logger);
+        try (FileReaderPipe fileReaderPipe = factory.fileReaderPipeInstance(new SourceFile("src/test/resources/file1", ASCENDING));
              SourcePipe validator = factory.validatorPipeInstance(fileReaderPipe)
         ) {
             var expected = Files.readAllLines(Path.of("src/test/resources/file1"))

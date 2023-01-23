@@ -1,4 +1,4 @@
-package Validation;
+package validation;
 
 import java.util.Comparator;
 import java.util.function.Predicate;

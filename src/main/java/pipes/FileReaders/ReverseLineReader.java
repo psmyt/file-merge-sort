@@ -1,4 +1,4 @@
-package Pipes.FileReaders;
+package pipes.FileReaders;
 
 import org.apache.commons.io.input.ReversedLinesFileReader;
 

@@ -1,10 +1,9 @@
-import Configuration.Configuration;
-import Pipes.ListOfSourcePipes;
-import Pipes.PipeFactory;
-import Pipes.Pipe;
-import Validation.ErrorLogger;
-import Validation.SourceFile;
-
+import configuration.Configuration;
+import pipes.ListOfSourcePipes;
+import pipes.PipeFactory;
+import pipes.Pipe;
+import validation.ErrorLogger;
+import validation.SourceFile;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;

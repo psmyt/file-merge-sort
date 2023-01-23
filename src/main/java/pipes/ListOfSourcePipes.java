@@ -1,6 +1,4 @@
-package Pipes;
-
-import Pipes.SourcePipe;
+package pipes;
 
 import java.util.ArrayList;
 

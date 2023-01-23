@@ -1,4 +1,4 @@
-package Pipes;
+package pipes;
 
 import java.util.Comparator;
 

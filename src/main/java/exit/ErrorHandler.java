@@ -1,4 +1,4 @@
-package ErrorHandler;
+package exit;
 
 public class ErrorHandler {
 

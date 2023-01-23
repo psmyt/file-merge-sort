@@ -1,4 +1,4 @@
-package Pipes;
+package pipes;
 
 public interface Pipe {
     public String peek();

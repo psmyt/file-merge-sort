@@ -1,4 +1,4 @@
-package Pipes;
+package pipes;
 
 import java.util.Collection;
 import java.util.LinkedList;

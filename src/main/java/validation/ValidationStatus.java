@@ -1,4 +1,4 @@
-package Validation;
+package validation;
 
 public enum ValidationStatus {
     VALID,

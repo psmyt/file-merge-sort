@@ -1,6 +1,4 @@
-package Pipes.FileReaders;
-
-import Pipes.FileReaders.BufferedLineReader;
+package pipes.FileReaders;
 
 import java.io.BufferedReader;
 import java.io.IOException;
