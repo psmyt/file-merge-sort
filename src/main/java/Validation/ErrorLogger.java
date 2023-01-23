@@ -27,7 +27,7 @@ public class ErrorLogger implements Runnable {
     @Override
     public void run() {
         try (FileWriter fileWriter = new FileWriter(logFilePath, true);
-             BufferedWriter writer = new BufferedWriter(fileWriter, 64)
+             BufferedWriter writer = new BufferedWriter(fileWriter)
         ) {
             while (!stop.get()) {
                 String next = source.poll(1, TimeUnit.SECONDS);
