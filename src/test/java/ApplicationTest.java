@@ -29,7 +29,7 @@ class ApplicationTest {
     }
 
     @Test
-    public void appTest() throws IOException {
+    public void appTest() throws IOException, InterruptedException {
         new Application(new String[]{"-i", "-d",
                 "src/test/resources/result",
                 "src/test/resources/file1",
@@ -48,7 +48,7 @@ class ApplicationTest {
     }
 
     @Test
-    public void paramsTest() throws IOException {
+    public void paramsTest() throws IOException, InterruptedException {
         Application.main(new String[]{"-i",
                 "src/test/resources/result",
                 "src/test/resources/file1",

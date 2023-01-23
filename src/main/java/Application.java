@@ -34,7 +34,7 @@ public class Application {
     void execute() throws IOException {
         System.out.printf("начало %s %n", Instant.now().atZone(ZoneId.systemDefault()));
         new Thread(logger).start();
-        try (FileWriter fileWriter = new FileWriter(files.get(0));
+        try (FileWriter fileWriter = new FileWriter(files.get(0), true);
              BufferedWriter writer = new BufferedWriter(fileWriter);
              ListOfSourcePipes inputs = prepareSourcePipes(files);
         ) {

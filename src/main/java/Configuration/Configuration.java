@@ -158,6 +158,9 @@ public class Configuration {
                 while (!(response = scanner.next()).equals("y")) {
                     if (response.equals("n")) System.exit(0);
                 }
+                Files.delete(outputFile);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         } else try {
             Files.createFile(outputFile);

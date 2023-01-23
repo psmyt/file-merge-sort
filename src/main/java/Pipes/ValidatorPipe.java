@@ -25,7 +25,7 @@ public class ValidatorPipe implements SourcePipe, AutoCloseable {
         validator = validationStrategy.getValidator();
         comparator = validationStrategy.getComparator();
         this.source = source;
-        this.log = logger.getSource();
+        this.log = logger.getErrorQueue();
     }
 
     public ValidationStatus validate(String line) {
@@ -47,7 +47,6 @@ public class ValidatorPipe implements SourcePipe, AutoCloseable {
         ValidationStatus status = validate(nextLine);
         if (status == VALID) return nextLine;
         else {
-            logErrorMessage(nextLine, status);
             peekTillNextValid();
             return source.peek();
         }
@@ -62,7 +61,6 @@ public class ValidatorPipe implements SourcePipe, AutoCloseable {
             previousValidLine = nextLine;
             return nextLine;
         } else {
-            logErrorMessage(nextLine, status);
             peekTillNextValid();
             String nextValid = source.next();
             lineCounter++;
