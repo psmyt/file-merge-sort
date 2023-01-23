@@ -20,7 +20,7 @@ public class Application {
 
     final List<SourceFile> files;
 
-    final ErrorLogger logger = new ErrorLogger("src/test/resources/log.txt");
+    final ErrorLogger logger = new ErrorLogger("log.txt");
 
     Application(String[] args) {
         pipeFactory = new PipeFactory(Configuration.resolveValidationStrategy(args), logger);
